@@ -122,9 +122,9 @@ to adopt
     ;if dog-friendly? = false [stop]
     let adoptable-dogs dogs in-radius 10
     ask adoptable-dogs with [adoptability > 0] [
-      show adoptability
-      show age
-      show sex
+      ;show adoptability
+      ;show age
+      'show sex
     ]
   ]
 
