@@ -62,6 +62,7 @@ to go
   ;(all? patches [disease-ridden? = true]) or (all? dogs [Rabid?]) or (count dogs = 0) or
   if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
   adopt
+  kill-and-die
 end
 
 to dogs-get-neutered
@@ -103,7 +104,7 @@ to rabies-spread-dogs
 end
 
 to increase-in-age
-  if age = lifespan [ die ]
+  if age >= lifespan [ die ]
   set age age + 1
   if age > 24 [ set adoptability adoptability - 0.35 ]
 end
@@ -122,19 +123,27 @@ to adopt
     ;if dog-friendly? = false [stop]
     let adoptable-dogs dogs in-radius 10
     ask adoptable-dogs with [adoptability > 0] [
-      show adoptability
+      ;show adoptability
       ;show age
-      show sex
+      ;show sex
     ]
   ]
 
 end
 
-to kill
+to kill-and-die
+  let killed-dogs count dogs * kill-rate
+  ;ask n-of killed-dogs dogs [die]
+  ask dogs
+  [
+    if age >= lifespan [
+      ;show age
+      show lifespan
+    ]
+  ]
 end
 
-to dog-die
-end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 280
@@ -241,14 +250,14 @@ HORIZONTAL
 SLIDER
 35
 255
-207
+233
 288
 kill-rate
 kill-rate
 0
-5
-1.0
-1
+0.1
+0.07
+0.01
 1
 NIL
 HORIZONTAL
