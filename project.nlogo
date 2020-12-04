@@ -124,7 +124,7 @@ to adopt
     ask adoptable-dogs with [adoptability > 0] [
       ;show adoptability
       ;show age
-      'show sex
+      ';show sex
     ]
   ]
 
