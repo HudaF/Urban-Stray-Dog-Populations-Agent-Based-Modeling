@@ -52,11 +52,12 @@ end
 to go
   tick
   ifelse ticks mod 104 = 0 [set bred-period 1] [set bred-period bred-period + 1] ;restart after 2 years. all dogs should breed in 2 years.
-
+  ;show count dogs
   ; simulation stopping condition
   if (all? patches [disease-ridden? = true]) or (all? dogs [Rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
   if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
   ;adopt
+  ;show count dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false)]
   ;kill
   dog-reproduce
 end
@@ -118,24 +119,23 @@ to increase-in-age
 end
 
 to dog-reproduce
-  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) ] ;age > 6 months can breed
+  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false)] ;age > 6 months can breed
   let total-breed-count count female-breeders
 
   show total-breed-count
-  show bred-period
+  ;show bred-period
 
   if total-breed-count = 0 [stop]
-  let breed-count int(total-breed-count / 142)
-  if total-breed-count < 142 [set breed-count random-in-range 1 0]
+  let breed-count int(total-breed-count / 104)
+  if total-breed-count < 104 [set breed-count random-in-range 1 0]
+  show breed-count
 
-  ask female-breeders
+  if breed-count > 0
   [
-    if breed-count != 0
-    [
-      ask n-of breed-count female-breeders
+    ask n-of breed-count female-breeders
       [
         set bred? true
-        hatch-dogs random-in-range 1 6
+        hatch-dogs random-in-range 1 7
         [
           ifelse (random-float 1 < 0.5)
           [ set sex "Male" ]
@@ -154,18 +154,19 @@ to dog-reproduce
           if sex = "Female" [set adoptability adoptability + 0.3]
         ]
       ]
-    ]
-    if bred-period = 1 [ask female-breeders [set bred? true]]
   ]
+   wait 0.1
+  if bred-period = 1 [ask female-breeders [set bred? false]]
+
 end
 
 to adopt
   if all? dogs [adoptability = 0] [stop] ; no dog to adopt in vicinity
   ask patches with [dog-friendly? = true]
   [
-    ;if dog-friendly? = false [stop]
-    let adoptable-dogs dogs in-radius 10
-    ;ask adoptable-dogs with [adoptability > 0.6] [die ] ;ERROR HERE AS ADOPTABILITY OF ALL IS >0.3
+    let adoptable-dogs dogs in-radius 6
+    ;show count adoptable-dogs with [adoptability > 0.6]
+    ask adoptable-dogs with [adoptability > 0.6] [die] ;the dogs are no more roaming dogs so they die.
   ]
 
 end
@@ -175,7 +176,23 @@ to kill
   ask n-of killed-dogs dogs [die]
 end
 
+to keep
+  ifelse (random-float 1 < 0.5)
+          [ set sex "Male" ]
+          [ set sex "Female" ]
+          ;print "born"
+          set age 0
+          set lifespan random (521)
 
+          set Rabid? false
+          set color yellow
+          set sterilized? false
+          set vaccinated? false
+          set bred? false
+          set adoptability 0
+          set adoptability adoptability + 0.35
+          if sex = "Female" [set adoptability adoptability + 0.3]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 280
@@ -228,7 +245,7 @@ number-of-dogs
 number-of-dogs
 0
 1000
-800.0
+400.0
 100
 1
 NIL
@@ -315,7 +332,7 @@ INPUTBOX
 197
 391
 simulation-run-time-years
-4.0
+3.0
 1
 0
 Number
@@ -344,7 +361,7 @@ BUTTON
 499
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
