@@ -7,17 +7,19 @@
 ;     - initial rabid dog percentage
 ;     - lifespan increase when vaccinated or neutered
 ;     - are we changing rabid dog location?
+;     - age at which dogs can breed
 
 breed [ dogs dog ]
 
+globals [bred-period]
 ; age and lifespan is in terms of weeks
-dogs-own [ age lifespan sex rabid? sterilized? vaccinated? adoptability ]
+dogs-own [ age lifespan sex rabid? sterilized? vaccinated? adoptability bred?]
 
 patches-own [ disease-ridden? dog-friendly? ]
 
 to setup
   clear-all
-
+  set bred-period 0
   ask n-of number-of-humans patches [
     set pcolor green
     set disease-ridden? false
@@ -27,8 +29,8 @@ to setup
   create-dogs number-of-dogs [
     setxy random-xcor random-ycor
     set age random 521
-    set lifespan 10 - age
-    ifelse random 1 > 0.5 [
+    set lifespan random (521 - age)
+    ifelse random-float 1 > 0.5 [
       set sex "Female" ] [ set sex "Male" ]
     ifelse random-float 1 > 0.3 [
       set Rabid? false
@@ -37,14 +39,30 @@ to setup
       set color violet ]
     set sterilized? false
     set vaccinated? false
+    set bred? false
     set adoptability 0
     if sex = "Female" [ set adoptability adoptability + 0.3 ]
     if age <= 24 [ set adoptability adoptability + 0.35 ]
   ]
 
   ;ask dogs [ set shape "dog" ]
-
   reset-ticks
+end
+
+to go
+  tick
+  ifelse ticks mod 104 = 0 [set bred-period 1] [set bred-period bred-period + 1] ;restart after 2 years. all dogs should breed in 2 years.
+
+  ; simulation stopping condition
+  if (all? patches [disease-ridden? = true]) or (all? dogs [Rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
+  if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
+  ;adopt
+  ;kill
+  dog-reproduce
+end
+
+to-report random-in-range [low high]
+  report low + random (high - low)
 end
 
 to dogs-get-vaccinated
@@ -53,16 +71,6 @@ to dogs-get-vaccinated
     set lifespan lifespan + 260 ; 260 weeks = 5 years
     set adoptability adoptability + 0.175
     ifelse vaccinated? = true [ set color blue ] [ set color orange ] ]
-end
-
-to go
-  tick
-  ; simulation stopping condition
-  if (all? patches [disease-ridden? = true]) or (all? dogs [Rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
-  ;(all? patches [disease-ridden? = true]) or (all? dogs [Rabid?]) or (count dogs = 0) or
-  if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
-  adopt
-  kill-and-die
 end
 
 to dogs-get-neutered
@@ -109,29 +117,60 @@ to increase-in-age
   if age > 24 [ set adoptability adoptability - 0.35 ]
 end
 
-
 to dog-reproduce
-  ;if tick mod 104 != 0 [stop]
+  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) ] ;age > 6 months can breed
+  let total-breed-count count female-breeders
+
+  show total-breed-count
+  show bred-period
+
+  if total-breed-count = 0 [stop]
+  let breed-count int(total-breed-count / 142)
+  if total-breed-count < 142 [set breed-count random-in-range 1 0]
+
+  ask female-breeders
+  [
+    if breed-count != 0
+    [
+      ask n-of breed-count female-breeders
+      [
+        set bred? true
+        hatch-dogs random-in-range 1 6
+        [
+          ifelse (random-float 1 < 0.5)
+          [ set sex "Male" ]
+          [ set sex "Female" ]
+          ;print "born"
+          set age 0
+          set lifespan random (521)
+
+          set Rabid? false
+          set color yellow
+          set sterilized? false
+          set vaccinated? false
+          set bred? false
+          set adoptability 0
+          set adoptability adoptability + 0.35
+          if sex = "Female" [set adoptability adoptability + 0.3]
+        ]
+      ]
+    ]
+    if bred-period = 1 [ask female-breeders [set bred? true]]
+  ]
 end
 
 to adopt
   if all? dogs [adoptability = 0] [stop] ; no dog to adopt in vicinity
-  ;let dog-friendly-neigh-count sum [count patches-here] of neighbors
-  ;ask patches [show count dogs-on neighbors]
   ask patches with [dog-friendly? = true]
   [
     ;if dog-friendly? = false [stop]
     let adoptable-dogs dogs in-radius 10
-    ask adoptable-dogs with [adoptability > 0] [
-      ;show adoptability
-      ;show age
-      ;show sex
-    ]
+    ;ask adoptable-dogs with [adoptability > 0.6] [die ] ;ERROR HERE AS ADOPTABILITY OF ALL IS >0.3
   ]
 
 end
 
-to kill-and-die
+to kill
   let killed-dogs count dogs * kill-rate
   ask n-of killed-dogs dogs [die]
 end
@@ -188,9 +227,9 @@ SLIDER
 number-of-dogs
 number-of-dogs
 0
-250
-100.0
-1
+1000
+800.0
+100
 1
 NIL
 HORIZONTAL
@@ -276,7 +315,7 @@ INPUTBOX
 197
 391
 simulation-run-time-years
-1.0
+4.0
 1
 0
 Number
