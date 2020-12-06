@@ -24,7 +24,7 @@ to setup
   ask n-of number-of-humans patches [
     set pcolor green
     set disease-ridden? false
-    ifelse random 1 > friendly-probability [ set dog-friendly? false ] [ set dog-friendly? true ]
+    ifelse random-float 1 > friendly-probability [ set dog-friendly? false ] [ set dog-friendly? true ]
   ]
 
   create-dogs number-of-dogs [
@@ -85,6 +85,18 @@ to go
   ; simulation stopping condition
   if (all? patches [disease-ridden? = true]) or (all? dogs [rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
   if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
+
+  let neutered-dogs count dogs * neutering-rate / 100
+  ask n-of neutered-dogs dogs [ dogs-get-neutered ]
+
+  let vaccinated-dogs count dogs * vaccination-rate / 100
+  ask n-of vaccinated-dogs dogs [ dogs-get-vaccinated ]
+
+  let rabid-dogs count dogs * rabies-spread-rate / 100
+  ask n-of rabid-dogs dogs [ rabies-spread-dogs ]
+
+  rabies-spread-humans
+
   adopt
   kill
   dog-reproduce
@@ -115,15 +127,21 @@ to rabies-spread-humans
 
   while ( [ yval <= max-pycor ] ) [
     while ( [ xval <= max-pxcor ] ) [
-      if pcolor = green [
-        if any? dogs-on patch xval yval [
-          if rabid? = true [
-            set pcolor red
-            set disease-ridden? true
+      ask patch xval yval [
+        if pcolor = green and dog-friendly? = false and any? dogs-on patch xval yval [
+          let any-dog dogs-on patch xval yval
+          ask any-dog  [
+            if rabid? = true [
+              ask patch xval yval [
+                set pcolor red
+                set disease-ridden? true
+              ]
+            ]
           ]
         ]
       ]
-      set xval xval + 1 ]
+      set xval xval + 1
+    ]
     set yval yval + 1
     set xval min-pxcor
   ]
@@ -266,7 +284,7 @@ number-of-humans
 number-of-humans
 0
 1000
-200.0
+1000.0
 1
 1
 NIL
