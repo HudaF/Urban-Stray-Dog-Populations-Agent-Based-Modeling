@@ -414,8 +414,41 @@ true
 true
 "" ""
 PENS
-"huamns" 1.0 1 -16777216 true "" "plot count patches"
+"huamns" 1.0 0 -16777216 true "" "plot count patches"
 "rabid humans" 1.0 0 -8630108 true "" "plot count patches with [disease-ridden? = true]"
+
+MONITOR
+759
+504
+816
+549
+week
+ticks
+1
+1
+11
+
+MONITOR
+902
+504
+959
+549
+year
+int(ticks / 52)
+1
+1
+11
+
+MONITOR
+829
+504
+886
+549
+months
+int(ticks / (52 / 12))
+2
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
