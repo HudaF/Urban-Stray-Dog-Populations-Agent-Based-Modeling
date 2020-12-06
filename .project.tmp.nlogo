@@ -378,10 +378,10 @@ NIL
 0
 
 PLOT
-758
-36
-1207
-277
+768
+34
+1130
+275
 Dog poulation
 weeks
 dogs
@@ -390,7 +390,7 @@ dogs
 0.0
 500.0
 true
-true
+false
 "" ""
 PENS
 "dogs" 1.0 0 -16777216 true "" "plot count dogs"
@@ -399,10 +399,10 @@ PENS
 "vaccinated dogs" 1.0 0 -13345367 true "" "plot count dogs with [vaccinated?]"
 
 PLOT
-758
-293
-1208
-482
+766
+294
+1135
+449
 Humans affected by rabies per week
 weeks
 rabid humans
