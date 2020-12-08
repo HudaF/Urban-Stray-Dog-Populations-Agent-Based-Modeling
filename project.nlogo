@@ -6,7 +6,7 @@
 ;     - initial rabid dog percentage
 ;     - are we changing rabid dog location?
 ;     - age at which dogs can breed
-;     - limits of kill-rate (at killl-rate near or greater than 0.01 dogs die v fast!)
+;     - killing capacity
 
 breed [ dogs dog ]
 
@@ -24,7 +24,7 @@ to setup
     set disease-ridden? false
     ifelse random-float 1 > friendly-probability [ set dog-friendly? false ] [ set dog-friendly? true ]
   ]
-
+  ;set-default-shape dogs "default"
   create-dogs number-of-dogs [
     setxy random-xcor random-ycor
     set age random 678 ; 13 years
@@ -98,6 +98,12 @@ to go
   adopt
   kill
   dog-reproduce
+
+  ask dogs
+  [
+    left random 360
+    fd 1
+  ]
 end
 
 to-report random-in-range [low high]
@@ -163,8 +169,8 @@ to increase-in-age
 end
 
 to dog-reproduce
-  ask dogs with [bred? = true] [set last-litter-period last-litter-period + 1]
-  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) and (age > 25) and (last-litter-period > 6)] ;age > 6 months can breed and haven't given birth in past 6 months
+  ;ask dogs [set last-litter-period last-litter-period + 1]
+  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) and (age > 25) and (last-litter-period > 26)] ;age > 6 months can breed and haven't given birth in past 6 months
 
   let total-breed-count count female-breeders
 
@@ -195,7 +201,8 @@ to dog-reproduce
         ]
       ]
   ]
-  ;wait 0.1
+  wait 0.02
+  ask female-breeders [set last-litter-period last-litter-period + 1]
   if bred-period = 1 [ask female-breeders [set bred? false]]
 
 end
@@ -212,15 +219,18 @@ to adopt
 end
 
 to kill
-  let killed-dogs count dogs * kill-rate
-  ask n-of killed-dogs dogs [die]
+  let killed-dogs random-in-range 0 max-killing-capacity
+  if killed-dogs >= count dogs
+  [
+    ask n-of killed-dogs dogs [die]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-280
-34
-717
-472
+252
+30
+793
+572
 -1
 -1
 13.0
@@ -233,10 +243,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-20
+20
+-20
+20
 0
 0
 1
@@ -252,7 +262,7 @@ friendly-probability
 friendly-probability
 0
 1
-0.8
+0.2
 0.1
 1
 NIL
@@ -282,7 +292,7 @@ number-of-humans
 number-of-humans
 0
 1000
-1000.0
+600.0
 1
 1
 NIL
@@ -297,7 +307,7 @@ neutering-rate
 neutering-rate
 0
 100
-1.0
+20.0
 1
 1
 NIL
@@ -312,7 +322,7 @@ vaccination-rate
 vaccination-rate
 0
 100
-1.0
+20.0
 1
 1
 NIL
@@ -323,12 +333,12 @@ SLIDER
 255
 233
 288
-kill-rate
-kill-rate
+max-killing-capacity
+max-killing-capacity
 0
-0.02
-0.004
-0.002
+100
+20.0
+1
 1
 NIL
 HORIZONTAL
@@ -394,15 +404,15 @@ NIL
 0
 
 PLOT
-758
-36
-1207
-277
+845
+29
+1294
+270
 Dog poulation
 weeks
 dogs
 0.0
-142.0
+52.0
 0.0
 500.0
 true
@@ -415,29 +425,28 @@ PENS
 "vaccinated dogs" 1.0 0 -13345367 true "" "plot count dogs with [vaccinated?]"
 
 PLOT
-758
-293
-1208
-482
-Humans affected by rabies per week
+845
+286
+1295
+475
+Humans affected by rabies 
 weeks
 rabid humans
 0.0
-142.0
+52.0
 0.0
 1000.0
 true
 true
 "" ""
 PENS
-"huamns" 1.0 0 -16777216 true "" "plot count patches"
-"rabid humans" 1.0 0 -8630108 true "" "plot count patches with [disease-ridden? = true]"
+"rabid humans" 1.0 0 -2674135 true "" "plot count patches with [disease-ridden? = true]"
 
 MONITOR
-759
-504
-816
-549
+846
+497
+903
+542
 week
 ticks
 1
@@ -445,10 +454,10 @@ ticks
 11
 
 MONITOR
-902
-504
-959
-549
+989
+497
+1046
+542
 year
 int(ticks / 52)
 1
@@ -456,10 +465,10 @@ int(ticks / 52)
 11
 
 MONITOR
-829
-504
-886
-549
+916
+497
+973
+542
 months
 int(ticks / (52 / 12))
 2
