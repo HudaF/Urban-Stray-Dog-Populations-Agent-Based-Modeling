@@ -3,9 +3,7 @@
 ;     - vaccination rate max and min
 ;     - kill rate max and min
 ;     - rabies spread rate max and min
-;     - dogs age maximum, lifespan
 ;     - initial rabid dog percentage
-;     - lifespan increase when vaccinated or neutered
 ;     - are we changing rabid dog location?
 ;     - age at which dogs can breed
 ;     - limits of kill-rate (at killl-rate near or greater than 0.01 dogs die v fast!)
@@ -29,8 +27,8 @@ to setup
 
   create-dogs number-of-dogs [
     setxy random-xcor random-ycor
-    set age random 521
-    set lifespan random (521 - age)
+    set age random 678 ; 13 years
+    set lifespan random (678 - age)
     set-sex
     set-rabid
     set sterilized? false
@@ -109,7 +107,7 @@ end
 to dogs-get-vaccinated
   if rabid? = false and vaccinated? = false [
     set vaccinated? true
-    set lifespan lifespan + 260 ; 260 weeks = 5 years
+    ;set lifespan lifespan + 260 ; 260 weeks = 5 years
     set adoptability adoptability + 0.175
     ifelse vaccinated? = true [ set color blue ] [ set color orange ] ]
 end
