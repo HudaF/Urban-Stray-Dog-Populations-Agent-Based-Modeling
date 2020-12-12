@@ -1,12 +1,7 @@
-;Things needed to be changed:
+;Things that are kept generic, due to lack of information:
 ;     - neutering rate max and min
-;     - vaccination rate max and min
-;     - kill rate max and min
-;     - rabies spread rate max and min
+;     - vaccination rate max and min]
 ;     - initial rabid dog percentage
-;     - are we changing rabid dog location?
-;     - age at which dogs can breed
-;     - killing capacity
 
 breed [ dogs dog ]
 
@@ -18,6 +13,7 @@ patches-own [ disease-ridden? dog-friendly? ]
 
 to setup
   clear-all
+
   set bred-period 0
   ask n-of number-of-humans patches [
     set pcolor green
@@ -28,7 +24,7 @@ to setup
   create-dogs number-of-dogs [
     setxy random-xcor random-ycor
     set age random 678 ; 13 years
-    set lifespan random (678 - age)
+    set lifespan (678 - age)
     set-sex
     set-rabid
     set sterilized? false
@@ -45,13 +41,16 @@ to setup
 end
 
 to set-rabid
-  ifelse random-float 1 > 0.3
+  ifelse random-float 1 > 0.3 ; 30% probability of initial population being rabid
   [
     set rabid? false
-    set color yellow ]
+    set color yellow
+  ]
   [
     set rabid? true
     set color violet
+    set lifespan age + 1
+    set adoptability 0
   ]
 end
 
@@ -67,22 +66,25 @@ end
 
 
 to set-babies-rabid
-  ifelse random-float 1 < 0.3 ;30% probability of babies being rabid
+  ifelse random-float 1 < 0.5 ; 50% probability of babies being rabid
   [
     set rabid? false
     set color yellow ]
   [
     set rabid? true
     set color violet
+    set lifespan age + 1
+    set adoptability 0
   ]
 end
 
 to go
   tick
-  ifelse ticks mod 104 = 0 [set bred-period 1] [set bred-period bred-period + 1] ;restart after 2 years. all dogs should breed in 2 years.
+  if ticks >= simulation-run-time-years * 52 [stop]
+  ;ifelse ticks mod 104 = 0 [set bred-period 1] [set bred-period bred-period + 1] ;restart after 2 years. all dogs should breed in 2 years.
   ; simulation stopping condition
-  if (all? patches [disease-ridden? = true]) or (all? dogs [rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
-  if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
+  ;if (all? patches [disease-ridden? = true]) or (all? dogs [rabid?]) or (count dogs = 0) or (ticks >= simulation-run-time-years * 52) [stop]
+  ;if (all? dogs [vaccinated?]) and (all? dogs [sterilized?]) [stop]
 
   let neutered-dogs count dogs * neutering-rate / 100
   ask n-of neutered-dogs dogs [ dogs-get-neutered ]
@@ -90,8 +92,10 @@ to go
   let vaccinated-dogs count dogs * vaccination-rate / 100
   ask n-of vaccinated-dogs dogs [ dogs-get-vaccinated ]
 
-  let rabid-dogs count dogs * rabies-spread-rate / 100
-  ask n-of rabid-dogs dogs [ rabies-spread-dogs ]
+  ;let rabid-dogs count dogs * rabies-spread-rate / 100
+  ;ask n-of rabid-dogs dogs [ rabies-spread-dogs ]
+
+  rabies-spread-dogs
 
   rabies-spread-humans
 
@@ -103,7 +107,10 @@ to go
   [
     left random 360
     fd 1
+    increase-in-age
   ]
+
+  if ticks mod 52 = 0 [ ask patches with [ pcolor =  red ] [ set pcolor green ] ]
 end
 
 to-report random-in-range [low high]
@@ -115,7 +122,7 @@ to dogs-get-vaccinated
     set vaccinated? true
     ;set lifespan lifespan + 260 ; 260 weeks = 5 years
     set adoptability adoptability + 0.175
-    ifelse vaccinated? = true [ set color blue ] [ set color orange ] ]
+    ifelse sterilized? = true [ set color blue ] [ set color orange ] ]
 end
 
 to dogs-get-neutered
@@ -133,7 +140,7 @@ to rabies-spread-humans
     while ( [ xval <= max-pxcor ] ) [
       ask patch xval yval [
         if pcolor = green and dog-friendly? = false and any? dogs-on patch xval yval [
-          let any-dog dogs-on patch xval yval
+          let any-dog one-of dogs-on patch xval yval
           ask any-dog  [
             if rabid? = true [
               ask patch xval yval [
@@ -152,11 +159,14 @@ to rabies-spread-humans
 end
 
 to rabies-spread-dogs
-  if count dogs-here > 1 [
-    if random-float 1 < rabies-spread-rate [
-      ask dogs-here [
+  let rabid-dogs dogs with [ rabid? = true ]
+  ask rabid-dogs [
+    ask other dogs-here [
+      if rabid? = false and vaccinated? = false [
         set rabid? true
-        set lifespan 1
+        set color violet
+        set lifespan age + 1
+        set adoptability 0
       ]
     ]
   ]
@@ -170,7 +180,7 @@ end
 
 to dog-reproduce
   ;ask dogs [set last-litter-period last-litter-period + 1]
-  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) and (age > 25) and (last-litter-period > 26)] ;age > 6 months can breed and haven't given birth in past 6 months
+  let female-breeders dogs with [(sex = "Female") and (sterilized? = false) and (bred? = false) and (age > 52) and (last-litter-period > 26)] ;age > 52 weeks (1 year) can breed and haven't given birth in past 6 months
 
   let total-breed-count count female-breeders
 
@@ -220,7 +230,7 @@ end
 
 to kill
   let killed-dogs random-in-range 0 max-killing-capacity
-  if killed-dogs >= count dogs
+  if killed-dogs <= count dogs
   [
     ask n-of killed-dogs dogs [die]
   ]
@@ -229,8 +239,8 @@ end
 GRAPHICS-WINDOW
 252
 30
-793
-572
+689
+468
 -1
 -1
 13.0
@@ -243,10 +253,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--20
-20
--20
-20
+-16
+16
+-16
+16
 0
 0
 1
@@ -262,7 +272,7 @@ friendly-probability
 friendly-probability
 0
 1
-0.2
+0.3
 0.1
 1
 NIL
@@ -276,8 +286,8 @@ SLIDER
 number-of-dogs
 number-of-dogs
 0
-500
-300.0
+1000
+1000.0
 50
 1
 NIL
@@ -292,7 +302,7 @@ number-of-humans
 number-of-humans
 0
 1000
-600.0
+1000.0
 1
 1
 NIL
@@ -307,7 +317,7 @@ neutering-rate
 neutering-rate
 0
 100
-20.0
+100.0
 1
 1
 NIL
@@ -322,7 +332,7 @@ vaccination-rate
 vaccination-rate
 0
 100
-20.0
+0.0
 1
 1
 NIL
@@ -337,22 +347,7 @@ max-killing-capacity
 max-killing-capacity
 0
 100
-20.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-36
-293
-208
-326
-rabies-spread-rate
-rabies-spread-rate
-0
-100
-50.0
+0.0
 1
 1
 NIL
@@ -364,7 +359,7 @@ INPUTBOX
 197
 391
 simulation-run-time-years
-3.0
+1.0
 1
 0
 Number
@@ -419,10 +414,11 @@ true
 true
 "" ""
 PENS
-"dogs" 1.0 0 -16777216 true "" "plot count dogs"
-"rabid dogs" 1.0 0 -8630108 true "" "plot count dogs with [rabid?]"
-"sterilized dogs" 1.0 0 -14835848 true "" "plot count dogs with [sterilized?]"
-"vaccinated dogs" 1.0 0 -13345367 true "" "plot count dogs with [vaccinated?]"
+"non-rabid, non-neutered, non-sterilized dogs" 1.0 0 -1184463 true "" "plot count dogs with [rabid? = false and sterilized? = false and vaccinated? = false]"
+"rabid dogs" 1.0 0 -8630108 true "" "plot count dogs with [rabid? = true]"
+"only sterilized dogs" 1.0 0 -2064490 true "" "plot count dogs with [sterilized? = true and vaccinated? = false]"
+"only vaccinated dogs" 1.0 0 -955883 true "" "plot count dogs with [vaccinated? = true and sterilized? = false]"
+"sterilized and vaccinated dogs" 1.0 0 -13345367 true "" "plot count dogs with [vaccinated? = true and sterilized? = true]"
 
 PLOT
 845
