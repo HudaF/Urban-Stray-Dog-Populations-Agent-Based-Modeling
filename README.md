@@ -1,4 +1,4 @@
-Agent-Based-Modeling of Free Roaming Dogs in Karachi
+Agent Based Model - Vaccination and Neutering: Methods to Control Urban Stray Dog Populations and Rabies-Spread Among Humans
 =============
 
 ## About the Project:
