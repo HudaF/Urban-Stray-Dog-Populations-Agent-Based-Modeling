@@ -272,7 +272,7 @@ friendly-probability
 friendly-probability
 0
 1
-0.3
+0.1
 0.1
 1
 NIL
@@ -317,7 +317,7 @@ neutering-rate
 neutering-rate
 0
 100
-100.0
+10.0
 1
 1
 NIL
@@ -332,7 +332,7 @@ vaccination-rate
 vaccination-rate
 0
 100
-0.0
+25.0
 1
 1
 NIL
@@ -347,7 +347,7 @@ max-killing-capacity
 max-killing-capacity
 0
 100
-0.0
+3.0
 1
 1
 NIL
@@ -359,7 +359,7 @@ INPUTBOX
 197
 391
 simulation-run-time-years
-1.0
+3.0
 1
 0
 Number
@@ -388,7 +388,7 @@ BUTTON
 499
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
